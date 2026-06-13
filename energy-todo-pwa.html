@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Tasks</title>
+<link rel="manifest" href="manifest.json" />
+<meta name="theme-color" content="#6366f1" />
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, system-ui, sans-serif; background: linear-gradient(135deg,#f8fafc,#eef2ff); min-height: 100vh; color: #1e293b; }
+  .container { max-width: 480px; margin: 0 auto; padding: 16px; }
+  h1 { font-size: 24px; font-weight: 700; margin-bottom: 16px; }
+  .card { background: #fff; border-radius: 16px; padding: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); margin-bottom: 8px; }
+  .energy-grid, .effort-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+  .cat-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-top: 8px; }
+  .opt-btn { display:flex; flex-direction:column; align-items:center; gap:4px; padding:8px; border-radius:12px; border:2px solid transparent; background:#f1f5f9; font-size:12px; color:#94a3b8; cursor:pointer; }
+  .opt-btn.selected { transform: scale(1.05); }
+  .energy-low.selected { background:#fef2f2; border-color:#fca5a5; color:#ef4444; }
+  .energy-medium.selected { background:#fefce8; border-color:#fde047; color:#eab308; }
+  .energy-high.selected { background:#f0fdf4; border-color:#86efac; color:#22c55e; }
+  .effort-low.selected { background:#dcfce7; border-color:#86efac; color:#15803d; }
+  .effort-medium.selected { background:#fef9c3; border-color:#fde047; color:#a16207; }
+  .effort-high.selected { background:#fee2e2; border-color:#fca5a5; color:#b91c1c; }
+  .badge { font-size: 11px; padding: 2px 8px; border-radius: 999px; border: 1px solid; display:inline-flex; align-items:center; gap:4px; }
+  .badge-low { background:#dcfce7; border-color:#86efac; color:#15803d; }
+  .badge-medium { background:#fef9c3; border-color:#fde047; color:#a16207; }
+  .badge-high { background:#fee2e2; border-color:#fca5a5; color:#b91c1c; }
+  .badge-due { background:#f1f5f9; border-color:transparent; color:#475569; }
+  .badge-due.urgent { background:#ffedd5; color:#c2410c; }
+  .cat-financial { background:#d1fae5; border-color:#6ee7b7; color:#047857; }
+  .cat-hobbies { background:#f3e8ff; border-color:#d8b4fe; color:#7e22ce; }
+  .cat-household { background:#e0f2fe; border-color:#7dd3fc; color:#0369a1; }
+  .cat-health { background:#fce7f3; border-color:#f9a8d4; color:#be185d; }
+  .cat-travel { background:#fef3c7; border-color:#fcd34d; color:#a16207; }
+  .cat-other { background:#f1f5f9; border-color:#cbd5e1; color:#475569; }
+  .task { display:flex; gap:10px; align-items:flex-start; }
+  .check { width:24px; height:24px; border-radius:50%; border:2px solid #cbd5e1; flex-shrink:0; cursor:pointer; display:flex; align-items:center; justify-content:center; background:none; }
+  .check.done { background:#6366f1; border-color:#6366f1; color:#fff; }
+  .task-name { font-weight:500; word-break:break-word; }
+  .task-name.done { text-decoration: line-through; color:#94a3b8; }
+  .badges { display:flex; gap:6px; flex-wrap:wrap; margin-top:6px; }
+  .del-btn { background:none; border:none; color:#cbd5e1; cursor:pointer; flex-shrink:0; font-size:16px; }
+  .del-btn:hover { color:#f87171; }
+  .empty { text-align:center; color:#94a3b8; font-size:14px; padding:32px 0; }
+  .add-btn { width:100%; background:#6366f1; color:#fff; border:none; border-radius:16px; padding:12px; font-weight:600; font-size:15px; cursor:pointer; margin-bottom:16px; }
+  .add-btn:hover { background:#4f46e5; }
+  input[type=text], input[type=date] { width:100%; padding:10px 12px; border-radius:12px; border:1px solid #e2e8f0; font-size:14px; }
+  label { font-size:12px; font-weight:600; color:#94a3b8; display:block; margin-bottom:4px; }
+  .form-row { margin-bottom:10px; }
+  .form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+  .form-actions { display:flex; gap:8px; }
+  .btn-add { flex:1; background:#6366f1; color:#fff; border:none; border-radius:12px; padding:10px; font-weight:600; cursor:pointer; }
+  .btn-cancel { padding:10px 16px; background:#f1f5f9; color:#475569; border:none; border-radius:12px; font-weight:600; cursor:pointer; }
+  .filter-row { display:flex; gap:8px; overflow-x:auto; margin-bottom:16px; padding-bottom:4px; }
+  .filter-btn { display:flex; align-items:center; gap:4px; padding:6px 12px; border-radius:999px; font-size:12px; font-weight:600; border:2px solid #e2e8f0; background:#fff; color:#94a3b8; white-space:nowrap; cursor:pointer; }
+  .filter-btn.selected { transform: scale(1.05); border-width:2px; }
+  .filter-btn.selected.all { background:#334155; color:#fff; border-color:#334155; }
+  .hidden-note { text-align:center; color:#94a3b8; font-size:12px; padding:4px 0; }
+  .done-toggle { width:100%; display:flex; justify-content:space-between; align-items:center; background:none; border:none; color:#94a3b8; font-weight:600; font-size:14px; padding:8px 0; cursor:pointer; }
+  .done-task { opacity:0.6; }
+</style>
+</head>
+<body>
+<div class="container" id="app"></div>
+
+<script>
+const CATEGORIES = {
+  financial: { label: 'Financial', icon: '💰', cls: 'cat-financial' },
+  hobbies: { label: 'Hobbies', icon: '🎨', cls: 'cat-hobbies' },
+  household: { label: 'Household', icon: '🏠', cls: 'cat-household' },
+  health: { label: 'Health', icon: '❤️', cls: 'cat-health' },
+  travel: { label: 'Travel', icon: '✈️', cls: 'cat-travel' },
+  other: { label: 'Other', icon: '⋯', cls: 'cat-other' },
+};
+const EFFORT_LEVELS = { low: 1, medium: 2, high: 3 };
+const ENERGY_ICONS = { low: '🔋', medium: '🔋', high: '🔋' };
+
+let state = {
+  tasks: JSON.parse(localStorage.getItem('tasks') || '[]'),
+  energy: localStorage.getItem('energy') || 'medium',
+  showForm: false,
+  showDone: false,
+  filterCategory: 'all',
+  form: { name: '', effort: 'medium', time: '', due: '', category: 'household' }
+};
+
+function save() {
+  localStorage.setItem('tasks', JSON.stringify(state.tasks));
+  localStorage.setItem('energy', state.energy);
+}
+
+function isUrgent(due) {
+  if (!due) return false;
+  const d = new Date(due); d.setHours(0,0,0,0);
+  const t = new Date(); t.setHours(0,0,0,0);
+  return (d - t) / 86400000 <= 1;
+}
+
+function formatDue(due) {
+  const d = new Date(due); d.setHours(0,0,0,0);
+  const t = new Date(); t.setHours(0,0,0,0);
+  const diff = Math.round((d - t) / 86400000);
+  if (diff === 0) return 'Today';
+  if (diff === 1) return 'Tomorrow';
+  if (diff < 0) return Math.abs(diff) + 'd overdue';
+  return d.toLocaleDateString('en-GB', { day:'numeric', month:'short' });
+}
+
+function render() {
+  const active = state.tasks.filter(t => !t.done);
+  const done = state.tasks.filter(t => t.done);
+  const visible = active
+    .filter(t => isUrgent(t.due) || EFFORT_LEVELS[t.effort] <= EFFORT_LEVELS[state.energy])
+    .filter(t => state.filterCategory === 'all' || t.category === state.filterCategory)
+    .sort((a,b) => {
+      const au = isUrgent(a.due), bu = isUrgent(b.due);
+      if (au && !bu) return -1;
+      if (!au && bu) return 1;
+      if (a.due && b.due) return new Date(a.due) - new Date(b.due);
+      if (a.due) return -1;
+      if (b.due) return 1;
+      return EFFORT_LEVELS[a.effort] - EFFORT_LEVELS[b.effort];
+    });
+  const hidden = active.length - visible.length;
+
+  let html = '<h1>Tasks</h1>';
+
+  // Energy selector
+  html += '<div class="card"><label>How\\'s your energy today?</label><div class="energy-grid">';
+  ['low','medium','high'].forEach(lvl => {
+    html += `<button class="opt-btn energy-${lvl} ${state.energy===lvl?'selected':''}" onclick="setEnergy('${lvl}')">🔋<span style="text-transform:capitalize">${lvl}</span></button>`;
+  });
+  html += '</div></div>';
+
+  // Category filter
+  html += '<div class="filter-row">';
+  html += `<button class="filter-btn all ${state.filterCategory==='all'?'selected':''}" onclick="setFilter('all')">All</button>`;
+  Object.entries(CATEGORIES).forEach(([k,c]) => {
+    html += `<button class="filter-btn ${c.cls} ${state.filterCategory===k?'selected':''}" onclick="setFilter('${k}')">${c.icon} ${c.label}</button>`;
+  });
+  html += '</div>';
+
+  // Task list
+  if (visible.length === 0) {
+    html += `<div class="empty">${active.length===0 ? 'No tasks yet — add one below' : 'Nothing fits right now. Add a low-effort task, or bump your energy level.'}</div>`;
+  }
+  visible.forEach(t => {
+    const cat = CATEGORIES[t.category] || CATEGORIES.other;
+    html += `<div class="card task">
+      <button class="check" onclick="toggleDone(${t.id})"></button>
+      <div style="flex:1;min-width:0">
+        <div class="task-name">${escapeHtml(t.name)}</div>
+        <div class="badges">
+          <span class="badge ${cat.cls}">${cat.icon} ${cat.label}</span>
+          <span class="badge badge-${t.effort}">${t.effort}</span>
+          ${t.time ? `<span class="badge badge-due">⏱ ${escapeHtml(t.time)}</span>` : ''}
+          ${t.due ? `<span class="badge badge-due ${isUrgent(t.due)?'urgent':''}">📅 ${formatDue(t.due)}</span>` : ''}
+        </div>
+      </div>
+      <button class="del-btn" onclick="deleteTask(${t.id})">🗑</button>
+    </div>`;
+  });
+  if (hidden > 0) {
+    html += `<div class="hidden-note">${hidden} task${hidden>1?'s':''} hidden (too high effort for today)</div>`;
+  }
+
+  // Add task form
+  if (!state.showForm) {
+    html += '<button class="add-btn" onclick="toggleForm(true)">+ Add task</button>';
+  } else {
+    html += '<div class="card">';
+    html += `<div class="form-row"><input type="text" id="taskName" placeholder="What needs doing?" value="${escapeHtml(state.form.name)}" oninput="state.form.name=this.value" /></div>`;
+    html += '<div class="form-row"><label>Effort</label><div class="effort-grid">';
+    ['low','medium','high'].forEach(lvl => {
+      html += `<button class="opt-btn effort-${lvl} ${state.form.effort===lvl?'selected':''}" onclick="setFormEffort('${lvl}')" style="text-transform:capitalize">${lvl}</button>`;
+    });
+    html += '</div></div>';
+    html += `<div class="form-row form-grid2">
+      <div><label>Time estimate</label><input type="text" placeholder="e.g. 15 min" value="${escapeHtml(state.form.time)}" oninput="state.form.time=this.value" /></div>
+      <div><label>Due date</label><input type="date" value="${state.form.due}" oninput="state.form.due=this.value" /></div>
+    </div>`;
+    html += '<div class="form-row"><label>Category</label><div class="cat-grid">';
+    Object.entries(CATEGORIES).forEach(([k,c]) => {
+      html += `<button class="opt-btn ${state.form.category===k?c.cls+' selected':''}" onclick="setFormCategory('${k}')">${c.icon}<span>${c.label}</span></button>`;
+    });
+    html += '</div></div>';
+    html += `<div class="form-actions">
+      <button class="btn-add" onclick="addTask()">Add</button>
+      <button class="btn-cancel" onclick="toggleForm(false)">Cancel</button>
+    </div>`;
+    html += '</div>';
+  }
+
+  // Done section
+  if (done.length > 0) {
+    html += `<button class="done-toggle" onclick="toggleShowDone()"><span>Done (${done.length})</span><span>${state.showDone?'▲':'▼'}</span></button>`;
+    if (state.showDone) {
+      done.forEach(t => {
+        html += `<div class="card task done-task">
+          <button class="check done" onclick="toggleDone(${t.id})">✓</button>
+          <div style="flex:1;min-width:0"><div class="task-name done">${escapeHtml(t.name)}</div></div>
+          <button class="del-btn" onclick="deleteTask(${t.id})">🗑</button>
+        </div>`;
+      });
+    }
+  }
+
+  document.getElementById('app').innerHTML = html;
+
+  // restore focus to name input if form open
+  if (state.showForm) {
+    const el = document.getElementById('taskName');
+    if (el && document.activeElement !== el) {
+      // don't steal focus on initial render after toggling
+    }
+  }
+}
+
+function escapeHtml(s) {
+  const div = document.createElement('div');
+  div.textContent = s;
+  return div.innerHTML;
+}
+
+function setEnergy(lvl) { state.energy = lvl; save(); render(); }
+function setFilter(cat) { state.filterCategory = cat; render(); }
+function toggleDone(id) {
+  state.tasks = state.tasks.map(t => t.id===id ? {...t, done: !t.done} : t);
+  save(); render();
+}
+function deleteTask(id) {
+  state.tasks = state.tasks.filter(t => t.id !== id);
+  save(); render();
+}
+function toggleForm(v) { state.showForm = v; if(!v) state.form = { name:'', effort:'medium', time:'', due:'', category:'household' }; render(); }
+function toggleShowDone() { state.showDone = !state.showDone; render(); }
+function setFormEffort(lvl) { state.form.effort = lvl; render(); }
+function setFormCategory(cat) { state.form.category = cat; render(); }
+function addTask() {
+  const nameEl = document.getElementById('taskName');
+  const name = (nameEl ? nameEl.value : state.form.name).trim();
+  if (!name) return;
+  state.tasks.push({
+    id: Date.now(),
+    name,
+    effort: state.form.effort,
+    time: state.form.time.trim(),
+    due: state.form.due || null,
+    category: state.form.category,
+    done: false
+  });
+  state.form = { name:'', effort:'medium', time:'', due:'', category:'household' };
+  state.showForm = false;
+  save(); render();
+}
+
+render();
+
+// PWA service worker registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
+</script>
+</body>
+</html>
